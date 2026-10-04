@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pokédex Adventure</title>
+  <link rel="icon" href="assets/ui/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-lens" aria-hidden="true"></span>
+      <h1>Pokédex<span>Adventure</span></h1>
+    </div>
+    <div class="hud">
+      <div class="hud-stat"><span>Dinero</span><b id="hud-money">₽0</b></div>
+      <div class="hud-stat"><span>Pokédex</span><b id="hud-dex">0/0</b></div>
+      <div class="hud-stat is-shiny"><span>Shiny Dex</span><b id="hud-shiny">0/0</b></div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Secciones de la base">
+    <button data-screen="zones">🗺️ Zonas</button>
+    <button data-screen="backpack">🎒 Mochila</button>
+    <button data-screen="shop">🛒 Tienda</button>
+    <button data-screen="dex">📕 Pokédex</button>
+    <button data-screen="shinydex">✨ Shiny Dex</button>
+  </nav>
+
+  <main id="app" tabindex="-1">
+    <noscript>Pokédex Adventure necesita JavaScript activado.</noscript>
+  </main>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <!-- Orden importa: utilidades → datos → sistemas → UI -->
+  <script src="js/utils.js"></script>
+  <script src="js/data/pokemon.js"></script>
+  <script src="js/data/items.js"></script>
+  <script src="js/data/zones.js"></script>
+  <script src="js/data/events.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/pokedex.js"></script>
+  <script src="js/backpack.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/expedition.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
