@@ -100,7 +100,10 @@ window.PA = window.PA || {};
     );
   }
 
-  /** <img> que va probando rutas y termina en un respaldo que nunca falla. */
+  /** <img> que va probando rutas y termina en un respaldo que nunca falla.
+      Cada ruta se reintenta 2 veces (saltándose la caché) antes de pasar a la siguiente,
+      para que un fallo de red puntual no deje un Pokémon sin sprite. */
+  const RETRIES = 2;
   function imgChain(sources, fallback, alt, cls) {
     const img = new Image();
     img.alt = alt;
@@ -108,21 +111,31 @@ window.PA = window.PA || {};
     img.draggable = false;
     img.decoding = 'async';
     let i = 0;
+    let tries = 0;
+    let current = null;
     const extra = sources.map((s) => s.cls).filter(Boolean);
     const next = () => {
       extra.forEach((c) => img.classList.remove(c));
       if (i < sources.length) {
-        const s = sources[i++];
-        if (s.cls) img.classList.add(s.cls);
-        img.dataset.src = s.src;
-        img.src = s.src;
+        current = sources[i++];
+        tries = 0;
+        if (current.cls) img.classList.add(current.cls);
+        img.src = current.src;
       } else {
         img.onerror = null;
         img.classList.add('is-placeholder');
         img.src = fallback;
       }
     };
-    img.onerror = () => { warnMissing(img.dataset.src, alt); next(); };
+    img.onerror = () => {
+      if (tries < RETRIES) {
+        tries++;
+        setTimeout(() => { img.src = current.src + '?r=' + Date.now(); }, 400 * tries);
+      } else {
+        warnMissing(current.src, alt);
+        next();
+      }
+    };
     next();
     return img;
   }
