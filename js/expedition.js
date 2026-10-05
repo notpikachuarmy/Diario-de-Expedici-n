@@ -56,8 +56,8 @@
     if (x.st <= 0) { change('hp', -10); notes.push('Estás agotado y pierdes salud.'); }
     if (x.fd <= 0) { change('hp', -8); notes.push('El hambre te hace perder salud.'); }
     if (x.depth > z.safe && U.chance(0.22 + (x.depth - z.safe) * 0.05)) {
-      const broken = breakRandom();
-      if (broken) notes.push(`El desgaste rompe: ${broken}.`);
+      const worn = breakRandom();
+      if (worn) notes.push(`Desgaste: ${worn}.`);
     }
     if (notes.length) { log(notes.join(' '), 'warn'); x.resultText = notes.join(' '); }
     if (checkFaint()) return;
@@ -100,12 +100,22 @@
   }
 
   /* ---------------- Efectos ---------------- */
+  /** Desgasta un objeto: a las herramientas les quita 1 uso (se rompen al llegar a 0);
+      el resto (balls, curas, comida) se pierde entero. Devuelve el texto para el diario. */
+  function wearItem(it) {
+    const name = PA.ITEMS[it.id].name;
+    if (it.uses != null && it.uses > 1) {
+      it.uses--;
+      return `${name} se desgasta (le queda${it.uses === 1 ? '' : 'n'} ${it.uses} uso${it.uses === 1 ? '' : 's'})`;
+    }
+    B().removePlaced(it.uid);
+    return `${name} se rompe`;
+  }
+
   function breakRandom() {
     const placed = B().placed();
     if (!placed.length) return null;
-    const it = U.pick(placed);
-    B().removePlaced(it.uid);
-    return PA.ITEMS[it.id].name;
+    return wearItem(U.pick(placed));
   }
 
   function rollLoot() {
@@ -136,7 +146,7 @@
     }
     if (fx.breakRandom) {
       const b = breakRandom();
-      if (b) texts.push(`Se rompe: ${b}.`);
+      if (b) texts.push(`${b}.`);
     }
     return texts.join(' ');
   }
@@ -310,8 +320,11 @@
       if (reason === 'limite') {
         summary.bonus = z.reward;
         PA.state.money += z.reward;
+        summary.worn = [];
         for (const it of [...B().placed()]) {
-          if (U.chance(0.4)) { B().removePlaced(it.uid); summary.lost.push(PA.ITEMS[it.id].name); }
+          if (!U.chance(0.4)) continue;
+          const t = wearItem(it);
+          (t.endsWith('se rompe') ? summary.lost : summary.worn).push(t.endsWith('se rompe') ? PA.ITEMS[it.id].name : t);
         }
       }
     }
@@ -470,7 +483,8 @@
               }))
             : h('p', { class: 'muted', text: 'Esta vez no ha caído ninguno.' })),
         h('div', { class: 'panel' }, h('h3', { text: 'Objetos perdidos' }),
-          r.lost.length ? h('ul', { class: 'lost' }, r.lost.map((n) => h('li', { text: n }))) : h('p', { class: 'muted', text: 'Ninguno.' }))
+          r.lost.length ? h('ul', { class: 'lost' }, r.lost.map((n) => h('li', { text: n }))) : h('p', { class: 'muted', text: 'Ninguno.' }),
+          r.worn && r.worn.length ? [h('h3', { text: 'Desgastados', style: { marginTop: '.8rem' } }), h('ul', { class: 'worn' }, r.worn.map((n) => h('li', { text: n })))] : null)
       ),
       h('button', { class: 'btn btn-primary btn-big', onClick: () => { PA.state.lastResult = null; PA.save(); PA.ui.go('zones'); } }, 'Volver a la base')
     ));
